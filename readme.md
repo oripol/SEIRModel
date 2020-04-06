@@ -1,3 +1,7 @@
+https://oripol.github.io/SEIRmodel/
+
+
+
 
 https://github.com/amzn/emukit/blob/master/emukit/examples/spread_of_disease-with_seir_model/Emukit-task-spread-of-disease-with-seir-model.ipynb
 
