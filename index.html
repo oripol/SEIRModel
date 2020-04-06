@@ -92,7 +92,7 @@
       data.addColumn('number', 'Èxitus/dia');
       data.addColumn('number', 'Èxitus acumulats');
 
-      data.addRow([i, dI_Severe+dI_Fatal, dR_fatal, AccFatal]);
+      //data.addRow([i, dI_Severe+dI_Fatal, dR_fatal, AccFatal]);
 
       for (i=2;i<=200;i++){
         if (i>=Tconf && i <= Tconf+Tinc+Tinf) betaAux=(R0ini+((R0fin-R0ini)*(i-Tconf)/(Tinc+Tinf)))*(1/Trec);
