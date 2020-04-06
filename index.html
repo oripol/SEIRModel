@@ -1,0 +1,233 @@
+<html>
+<head>
+  <style>
+    table, th, td { border: 1px solid black;
+                    border-collapse: collapse;
+                  }
+    th, td { padding: 5px;}
+  </style>
+
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  <script type="text/javascript">
+    google.charts.load('current', {'packages':['corechart']});
+    google.charts.setOnLoadCallback(drawChart);
+
+    function refresh() {
+      drawChart();
+      calcR0();
+    }
+
+    function drawChart() {
+      var body = document.getElementsByTagName("body")[0];
+      var tabla   = document.createElement("table");
+      var tblBody = document.createElement("tbody");
+
+      var N=450000; // total population
+      var I0 = 1; // Initial number infected people
+      var Tinc=0;
+      var Tinf=0;
+      var R0ini=1;
+      var Tconf=1;
+      var R0fin=1;
+      var Phosp=1;
+      var Tmort=1;
+      var Pmort=1;
+      var Thosp=1;
+      var Tcasa=1;
+
+      var beta = 0.2; // Effective contaxt rate
+      var betaAux;
+
+      N=parseFloat(document.getElementById("N").value);
+      I0=parseFloat(document.getElementById("I0").value);
+      Tinc=parseFloat(document.getElementById("Tinc").value);
+      Tinf=parseFloat(document.getElementById("Tinf").value);
+      R0ini=parseFloat(document.getElementById("R0ini").value);
+      Tconf=parseFloat(document.getElementById("Tconf").value);
+      R0fin=parseFloat(document.getElementById("R0fin").value);
+      Phosp=parseFloat(document.getElementById("Phosp").value)/100;
+      Tmort=parseFloat(document.getElementById("Tmort").value);
+      Pmort=parseFloat(document.getElementById("Pmort").value)/100;
+      Thosp=parseFloat(document.getElementById("Thosp").value);
+      Tcasa=parseFloat(document.getElementById("Tcasa").value);
+      var Pmild=1-Phosp-Pmort;
+
+      var S0 = N-I0; // Initial number of susceptible people
+      var dI=I0;
+      var dE=0; // Exposed
+      var dS=S0;
+      var dI_Mild=0;
+      var dI_Severe=0;
+      var dI_Fatal=0;
+      var dR_mild=0;
+      var dR_severe=0;
+      var dR_fatal=0;
+      var AccFatal=0;
+      var i=1;
+
+      var Trec=Tinc+Tinf+Tcasa;
+
+      var hilera = document.createElement("tr");
+      var celda1 = document.createElement("td");
+      var textoCelda1 = document.createTextNode("Dia");
+      celda1.appendChild(textoCelda1);
+      hilera.appendChild(celda1);
+      var celda2 = document.createElement("td");
+      var textoCelda2 = document.createTextNode("Ingressats");
+      celda2.appendChild(textoCelda2);
+      hilera.appendChild(celda2);
+      var celda3 = document.createElement("td");
+      var textoCelda3 = document.createTextNode("Èxitus/dia");
+      celda3.appendChild(textoCelda3);
+      hilera.appendChild(celda3);
+      var celda4 = document.createElement("td");
+      var textoCelda4 = document.createTextNode("Èxitus acumulats");
+      celda4.appendChild(textoCelda4);
+      hilera.appendChild(celda4);
+      tblBody.appendChild(hilera);
+
+      data = new google.visualization.DataTable(); // Create our data table.
+      data.addColumn('number', 'Dia');
+      data.addColumn('number', 'Ingressats');
+      data.addColumn('number', 'Èxitus/dia');
+      data.addColumn('number', 'Èxitus acumulats');
+
+      data.addRow([i, dI_Severe+dI_Fatal, dR_fatal, AccFatal]);
+
+      for (i=2;i<=200;i++){
+        if (i>=Tconf && i <= Tconf+Tinc+Tinf) betaAux=(R0ini+((R0fin-R0ini)*(i-Tconf)/(Tinc+Tinf)))*(1/Trec);
+        else if (i>Tconf+Tinc+Tinf) betaAux=R0fin/Trec;
+        else betaAux=R0ini/Trec;
+
+        var dSaux=dS+(-betaAux*dI*dS/N);
+        var dEaux=dE +(betaAux*dI*dS/N)-dE/Tinc;
+        var dIaux=dI+(dE/Tinc)-(dI/Trec);
+        var dI_Mildaux=dI_Mild+(Pmild*dE/Tinc)-(dI_Mild/Tcasa);
+        var dI_Severeaux=dI_Severe+(Phosp*dE/Tinc)-(dI_Severe/Thosp);
+        var dI_Fatalaux=dI_Fatal+(Pmort*dE/Tinc)-(dI_Fatal/Tmort);
+        dR_mild=dR_mild+(dI_Mild/Tcasa);
+        dR_severe=dR_severe+(dI_Severe/Thosp);
+        dR_fatal=(dI_Fatal/Tmort);
+        AccFatal=AccFatal+dR_fatal;
+
+        dS=dSaux;
+        dE=dEaux;
+        dI=dIaux;
+        dI_Mild=dI_Mildaux;
+        dI_Severe=dI_Severeaux;
+        dI_Fatal=dI_Fatalaux;
+        data.addRow([i, dI_Severe+dI_Fatal, dR_fatal, AccFatal]);
+
+        var hil1 = document.createElement("tr");
+        var cel1 = document.createElement("td");
+        var texCel1 = document.createTextNode(i);
+        cel1.appendChild(texCel1);
+        hil1.appendChild(cel1);
+        var cel2 = document.createElement("td");
+        var texCel2 = document.createTextNode(Math.round(100*dI_Severe+dI_Fatal)/100);
+        cel2.appendChild(texCel2);
+        hil1.appendChild(cel2);
+        var cel3 = document.createElement("td");
+        var texCel3 = document.createTextNode(Math.round(100*dR_fatal)/100);
+        cel3.appendChild(texCel3);
+        hil1.appendChild(cel3);
+        var cel4 = document.createElement("td");
+        var texCel4 = document.createTextNode(Math.round(100*AccFatal)/100);
+        cel4.appendChild(texCel4);
+        hil1.appendChild(cel4);
+        tblBody.appendChild(hil1);
+     }
+
+      var options = {
+        title: 'SIR model - COVID',
+        curveType: 'function',
+        legend: { position: 'bottom' }
+      };
+
+      var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
+
+      chart.draw(data, options);
+
+      tabla.appendChild(tblBody);
+      body.appendChild(tabla);
+
+    }
+
+    function calcR0() {
+      //var x = parseFloat(document.getElementById("beta").value)/parseFloat(document.getElementById("gamma").value);
+      //document.getElementById("Rcero").innerHTML = x;
+    }
+  </script>
+  <title>Simulació COVID</title>
+</head>
+<body>
+  <h1>Simulació COVID:</h1>
+  <h2>Paràmetres del model:</h2>
+
+  <table>
+    <tbody>
+      <tr><td>
+        <table>
+          <tbody>
+            <tr>
+              <td><label >Població:</label></th>
+              <td><input type="number" id="N" name="N" value="450000" step="1000" min="1000" onchange="refresh()"></td>
+            </tr>
+            <tr>
+              <td><label >Infectats a l'inici:</label></td>
+              <td><input type="number" id="I0" name="I0" value="100" step="5" min="5" onchange="refresh()"></td>
+            </tr>
+            <tr>
+              <td><label >Dies incubació:</label></td>
+              <td><input type="number" id="Tinc" name="Tinc" value="5" step="0.1" max="30" min="0" onchange="refresh()"></td>
+            </tr>
+            <tr>
+              <td><label >Dies pac. infecciós:</label></td>
+              <td><input type="number" id="Tinf" name="Tinf" value="25" step="0.1" max="30" min="0" onchange="refresh()"></td>
+            </tr>
+            <tr>
+              <td><label >Repr. Number (R0) incial:</label></td>
+              <td><input type="number" id="R0ini" name="R0ini" value="3.00" step="0.01" max="20" min="0" onchange="refresh()"></label></td>
+            </tr>
+            <tr>
+              <td><label >R0 després confianment:</label></td>
+              <td><input type="number" id="R0fin" name="R0fin" value="0.80" step="0.01" max="20" min="0" onchange="refresh()"></label></td>
+            </tr>
+            <tr>
+              <td><label >Dies fins confinament:</label></td>
+              <td><input type="number" id="Tconf" name="Tconf" value="30" step="1" max="200" min="0" onchange="refresh()"></label></td>
+            </tr>
+            <tr>
+              <td><label >Temps Recuperació pac lleus:</label></td>
+              <td><input type="number" id="Tcasa" name="Tcasa" value="15" step="0.1" max="50" min="0" onchange="refresh()"></label></td>
+            </tr>
+            <tr>
+              <td><label >% hospitalització:</label></td>
+              <td><input type="number" id="Phosp" name="Phosp" value="60" step="1" max="100" min="1" onchange="refresh()"></label></td>
+            </tr>
+            <tr>
+              <td><label >Temps de hospitalització:</label></td>
+              <td><input type="number" id="Thosp" name="Thosp" value="25" step="0.1" max="50" min="0" onchange="refresh()"></label></td>
+            </tr>
+            <tr>
+              <td><label >% mortalitat:</label></td>
+              <td><input type="number" id="Pmort" name="Pmort" value="10" step="0.1" max="100" min="1" onchange="refresh()"></label></td>
+            </tr>
+            <tr>
+              <td><label >Temps fins èxitus:</label></td>
+              <td><input type="number" id="Tmort" name="Tmort" value="25" step="0.1" max="50" min="0" onchange="refresh()"></label></td>
+          </tr>
+          </tbody>
+        </table>
+      </td>
+      <td><div id="curve_chart" style="width: 900px; height: 600px"></div></td>
+      </tr>
+    </tbody>
+  </table>
+
+
+
+
+  <p id="Rcero"></p>
+</body>
+</html>
