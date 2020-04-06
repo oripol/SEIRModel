@@ -140,8 +140,8 @@
 
       var options = {
         title: 'SIR model - COVID',
-        curveType: 'function',
-        legend: { position: 'bottom' }
+        legend: { position: 'bottom' },
+        vAxis: {scaleType: 'log'}
       };
 
       var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
